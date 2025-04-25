@@ -1,0 +1,10 @@
+[Unit]
+Description=Recorder
+
+[Service]
+Type=simple
+ExecStart=/home/icam-540/nevikw39/Recorder/recorder.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
