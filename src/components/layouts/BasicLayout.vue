@@ -1,17 +1,17 @@
 <template>
-    <div class="basic-layout flex flex-row">
-        <div class="side-bar">
-            <div class="user-info">
-                <slot name="user-info">User1</slot>
-            </div>
-            <div class="notification">
-                <slot name="notification">Notification1</slot>
-            </div>
-        </div>
-        <div class="main-content">
-            <slot name="main-content">Content1</slot>
-        </div>
+  <div class="basic-layout flex flex-row">
+    <div class="side-bar sidebar">
+      <div class="user-info border-1">
+        <slot name="user-info">User1</slot>
+      </div>
+      <div class="notification border-1">
+        <slot name="notification">Notification1</slot>
+      </div>
     </div>
+    <div class="main-content">
+      <slot name="main-content">Content1</slot>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -28,7 +28,7 @@
 .side-bar {
   width: 300px;
   height: 100vh;
-  background-color: #f0f0f0;
+  /* background-color: #f0f0f0; */
   display: flex;
   flex-direction: column;
   justify-content: start;
@@ -40,7 +40,7 @@
 .user-info {
   height: 120px;
   width: 100%;
-  background-color: #f0f0f0;
+  /* background-color: #f0f0f0; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -50,7 +50,7 @@
 .notification {
   height: calc(100vh - 120px);
   width: 100%;
-  background-color: #e0e0e0;
+  /* background-color: #e0e0e0; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -59,7 +59,7 @@
 }
 .main-content {
   flex: 1;
-  background-color: #ffffff;
+  /* background-color: #ffffff; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -67,4 +67,13 @@
   padding: 0;
 }
 
+@media screen and (max-width: 768px) {
+  .side-bar {
+    display: none;
+  }
+  .main-content {
+    width: 100%;
+    height: 100%;
+  }
+}
 </style>

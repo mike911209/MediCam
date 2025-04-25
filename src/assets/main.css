@@ -1,6 +1,46 @@
-html, body {
+@import 'primeicons/primeicons.css';
+
+:root {
+  --color-primary: #37613c;
+  --color-secondary: #798233;
+  --color-background: #aab8ab;
+  --color-text: #1f2937;
+  --color-text-secondary: #aab8ab;
+}
+
+html,
+body {
+  color: var(--color-text);
+  background: var(--color-background);
+
+  .button {
+    background: var(--color-primary);
+    color: var(--color-text-secondary);
+  }
+
+  .button:hover {
+    background: var(--color-secondary);
+    color: var(--color-text);
+  }
+
+  transition:
+    color 0.5s,
+    background-color 0.5s;
   padding: 0;
   margin: 0;
-  height: 100%;
-  width: 100%;
+  height: 100vh;
+  width: 100vw;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
 }
