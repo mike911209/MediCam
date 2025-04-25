@@ -1,0 +1,10 @@
+[Unit]
+Description=Whisper ASR Server
+
+[Service]
+Type=simple
+ExecStart=/home/icam-540/nevikw39/ASR/whisper_server.sh --logging 1
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
