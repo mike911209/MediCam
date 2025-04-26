@@ -7,7 +7,11 @@ import json
 import requests
 import subprocess
 from config import Config
+import signal
+import boto3
+import tempfile
 
+s3 = boto3.client('s3')
 
 def mqtt_build() -> Connection:
     event_loop_group = io.EventLoopGroup(1)
@@ -57,6 +61,7 @@ def subscribe(mqtt_connection: Connection):
     # api for start streaming
     def start_stream(topic, payload, **kwargs):
         message = json.loads(payload)
+        print("inside start stream")
         if message["start_stream"]:
             logger.info("Start streaming...")
 
@@ -110,11 +115,36 @@ def subscribe(mqtt_connection: Connection):
         callback=end_stream
     )
 
+    def play_audio(topic, payload, **kwargs):
+        logger.info("Start playing audio")
+        message = json.loads(payload)
+        bucket_name = message["bucket"]
+        key = message["key"]
+
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp_file:
+            tmp_file_path = tmp_file.name
+            s3.download_fileobj(Bucket=bucket_name, Key=key, Fileobj=tmp_file)
+
+        logger.info(f"Downloaded audio to {tmp_file_path}")
+
+        try:
+            subprocess.run(['mpg123', tmp_file_path], check=True)
+            logger.info("Audio played successfully")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to play audio: {e}")
+
+        logger.info("Done played audio")
+    
+    mqtt_connection.subscribe(
+        topic="icam/audio_response",
+        qos=mqtt.QoS.AT_LEAST_ONCE,
+        callback=play_audio
+    )
+
 if __name__ == "__main__":
     logger.info("Starting streaming...")
     mqtt_connection = mqtt_build()
 
     subscribe(mqtt_connection)
     
-    while True:
-        pass
+    signal.pause()

@@ -17,6 +17,6 @@ class Config:
     ca_filepath = connect_prefix + "root-CA.crt"
 
     iot_client_id = "icam"
-    iot_endpoint = "a30nuhpd8lu11l-ats.iot.us-east-1.amazonaws.com"
+    iot_endpoint = "a2uhbsqzhm0mpu-ats.iot.us-east-1.amazonaws.com"
 
     process: Popen = None
