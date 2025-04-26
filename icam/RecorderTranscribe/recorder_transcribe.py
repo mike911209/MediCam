@@ -19,10 +19,10 @@ import sounddevice as sd
 SAMPLE_RATE = 16000  # Audio sample rate (Hz)
 THRESHOLD = 1e-4  # Volume threshold to decide "not muted"
 BUCKET_TEXT = "unapproved-orders"  # S3 bucket name
-BUCKET_RECORDING = "unapproved-orders"  #
+BUCKET_RECORDING = "medicam-recordings"  #
 
 
-def main(lang: str):
+def main():
     s3 = boto3.client("s3")
     transcribe = boto3.client('transcribe')
 
@@ -34,7 +34,7 @@ def main(lang: str):
         logging.debug(f"avg. vol.: {avg_vol}")
 
         if True: # avg_vol > THRESHOLD:
-            job = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+            job = datetime.now().isoformat(timespec="seconds").replace(':', '-')
             path = f"/tmp/{job}.wav"
 
             logging.info(f"Saving {path}...")
@@ -48,7 +48,8 @@ def main(lang: str):
                 TranscriptionJobName=job,
                 Media={'MediaFileUri': f"s3://{BUCKET_RECORDING}/{job}.wav"},
                 MediaFormat='wav',
-                LanguageCode=lang,
+                IdentifyMultipleLanguages=True,
+                LanguageOptions=('en-US', 'zh-TW'),
             )
 
             while (result := transcribe.get_transcription_job(TranscriptionJobName=job))['TranscriptionJob']['TranscriptionJobStatus'] not in ('COMPLETED', 'FAILED'):
@@ -56,7 +57,7 @@ def main(lang: str):
             
             if result['TranscriptionJob']['TranscriptionJobStatus'] == 'FAILED':
                 logging.error(f"Transcription failed: {result['TranscriptionJob']['FailureReason']}!!")
-                break
+                continue
 
             url = result['TranscriptionJob']['Transcript']['TranscriptFileUri']
             response = requests.get(url).json()['results']['transcripts'][0]['transcript']
@@ -72,12 +73,7 @@ def main(lang: str):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Recorder and Transcriber.")
-    parser.add_argument(
-        "--lang",
-        default="en-US",
-        type=str,
-    )
+    parser = argparse.ArgumentParser(description="Recorder with Transcribe.")
     parser.add_argument(
         "--logging",
         default=0,
@@ -90,4 +86,4 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=args.logging * 10)
 
-    main(args.lang)
+    main()
