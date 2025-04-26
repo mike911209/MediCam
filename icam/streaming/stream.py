@@ -40,12 +40,17 @@ def start_streaming() -> subprocess.Popen:
     # GStreamer pipeline: test source → h264 encode → send to KVS
     # turn the following command into a python subprocess
 
+    response = requests.get(Config.api_prefix + "/camera/resolution").json()
+    # read response result
+    width = response['result']['width']
+    height = response['result']['height']
+
     command = [
         "gst-launch-1.0",
         "v4l2src", "do-timestamp=TRUE", "device=/dev/video10", "!",
         "videoconvert", "!",
-        "video/x-raw,format=I420,width=640,height=480,framerate=30/1", "!",
-        "x264enc", "bframes=0", "key-int-max=30", "bitrate=500", "tune=zerolatency", "!",
+        f"video/x-raw,format=I420,width={width},height={height},framerate=30/1", "!",
+        "x264enc", "bframes=0", "key-int-max=30", "bitrate=8000", "tune=zerolatency", "!",
         "h264parse", "!",
         "video/x-h264,stream-format=avc,alignment=au,profile=baseline", "!",
         "kvssink",
@@ -61,7 +66,6 @@ def subscribe(mqtt_connection: Connection):
     # api for start streaming
     def start_stream(topic, payload, **kwargs):
         message = json.loads(payload)
-        print("inside start stream")
         if message["start_stream"]:
             logger.info("Start streaming...")
 
