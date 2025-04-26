@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import json
 import os
 from pathlib import Path
 
@@ -27,9 +28,9 @@ def main(model_size: str, interval: float, waves_dir: str, texts_dir: str):
             mel = whisper.log_mel_spectrogram(audio).to(model.device)
             result = whisper.decode(model, mel, options)
 
-            with open(os.path.join(texts_dir, Path(wave).with_suffix(".txt")), 'w') as f:
+            with open(os.path.join(texts_dir, Path(wave).with_suffix(".json")), 'w') as f:
                 logging.info(f"Saving to {wave_path}...")
-                f.write(result.text)
+                json.dump({"date": os.path.basename(wave_path), "text": result.text}, f)
 
             logging.info(f"Cleaning up {wave_path}...")
             os.remove(wave_path)
