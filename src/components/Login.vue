@@ -1,5 +1,6 @@
 <template>
   <div class="login-container">
+    <h2>MediCam</h2>
     <div class="username-container">
       <label for="username">Username</label>
       <InputText id="username" v-model="username" type="text" />
@@ -11,7 +12,7 @@
     </div>
 
     <div class="login-button">
-      <Button label="Login" icon="pi pi-user" @click="handleLogin" />
+      <Button class="button" label="Login" icon="pi pi-user" @click="handleLogin" />
     </div>
 
     <p v-if="errorMessage" class="text-red-500">{{ errorMessage }}</p>
@@ -19,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import InputText from 'primevue/inputtext'
@@ -33,8 +33,8 @@ const errorMessage = ref('')
 const router = useRouter()
 
 const userPool = new CognitoUserPool({
-  UserPoolId: 'ap-northeast-1_iztOOzTMc', // User Pool ID
-  ClientId: '5evhhmpo9lo76fvred39u7cpkn', // App Client ID
+  UserPoolId: 'us-east-1_NaKfQ7Ulj', // User Pool ID
+  ClientId: '12eu2ndpm6sb4h1bto0kmdna0a', // App Client ID
 })
 
 const handleLogin = () => {

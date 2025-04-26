@@ -4,17 +4,18 @@
       <div>User2</div>
     </template>
     <template v-slot:notification>
-      <div>Notification2</div>
+      <NotificationList />
+      <!-- <div>Notification2</div> -->
     </template>
     <template v-slot:main-content>
       <!-- <div>Content2</div> -->
-       <ChatRoom/>
+      <ChatRoom />
     </template>
   </BasicLayout>
 </template>
 
 <script setup lang="ts">
 import BasicLayout from '../components/layouts/BasicLayout.vue'
-import ChatRoom from '@/components/ChatRoom.vue';
-
+import ChatRoom from '@/components/ChatRoom.vue'
+import NotificationList from '@/components/NotificationList.vue'
 </script>

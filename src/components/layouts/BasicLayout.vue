@@ -1,10 +1,10 @@
 <template>
   <div class="basic-layout flex flex-row">
     <div class="side-bar sidebar">
-      <div class="user-info border-1">
+      <div class="user-info">
         <slot name="user-info">User1</slot>
       </div>
-      <div class="notification border-1">
+      <div class="notification">
         <slot name="notification">Notification1</slot>
       </div>
     </div>

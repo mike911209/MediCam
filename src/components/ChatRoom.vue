@@ -1,7 +1,7 @@
 <template>
   <div class="chat-room-container">
     <div class="chat-room-header">
-      <h3>MediCam</h3>
+      <h1>MediCam</h1>
     </div>
     <div class="chat-room-content">
       <div class="message-list" ref="messageListRef">
@@ -12,7 +12,7 @@
           class="message-item"
           :class="{ 'from-user': message.role === 'user' }"
         >
-          <div class="message-sender">{{ message.role }}</div>
+          <!-- <div class="message-sender">{{ message.role }}</div> -->
           <div class="message-text">{{ message.content }}</div>
         </div>
       </div>
@@ -99,6 +99,7 @@ const sendMessage = async () => {
   flex-direction: column;
   height: 100%;
   width: 100%;
+  gap: 10px;
   /* background-color: #f0f0f0; */
 }
 
