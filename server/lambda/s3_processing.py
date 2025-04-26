@@ -23,8 +23,9 @@ def lambda_handler(event, context):
     
     # Read the object's content
     content = response['Body'].read().decode('utf-8')
+    content = content.lower()
     
-    if "camera" in content:
+    if "medica" in content:
         response = bedrock_agent.invoke_agent(
             agentId=AGENT_ID,
             agentAliasId=AGENT_ALIAS_ID,
