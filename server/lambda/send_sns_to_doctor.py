@@ -3,8 +3,8 @@ import boto3
 import urllib.parse
 import os
 
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:420210061761:DoctorAprrove"
-APPROVE_INVOKE_BASE_URL = "https://mey7i7fmo6.execute-api.us-east-1.amazonaws.com/doctor/get_response"
+SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN")
+APPROVE_INVOKE_BASE_URL = os.getenv("APPROVE_INVOKE_BASE_URL")
 
 
 def lambda_handler(event, context):
