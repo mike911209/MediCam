@@ -69,7 +69,7 @@ def subscribe(mqtt_connection: Connection):
         if message["start_stream"]:
             logger.info("Start streaming...")
 
-            led_status = message["led_status"] if "led_status" in message else '0'
+            led_status = message["led_status"]
             response = requests.post(Config.api_prefix + "/camera/led_status", files={
                 'led_status': (None, led_status)
             })
@@ -144,6 +144,59 @@ def subscribe(mqtt_connection: Connection):
         qos=mqtt.QoS.AT_LEAST_ONCE,
         callback=play_audio
     )
+
+    def add_focus(topic, payload, **kwargs):
+        message = json.loads(payload)
+        distance = Config.focus_distance
+
+        response = requests.post(Config.api_prefix + "/camera/focus_distance", files={
+            'focus_distance': (None, distance)
+        })
+        if response.status_code != 200:
+            logger.debug(response.text)
+            logger.error("Adjust failed due to focus error")
+        
+        response = requests.post(Config.api_prefix + "/camera/focus_direction", files={
+            'focus_direction': (None, "1")
+        })
+        if response.status_code != 200:
+            logger.debug(response.text)
+            logger.error("Adjust failed due to direction error")
+
+        logger.success("Adjust successed")
+    
+    mqtt_connection.subscribe(
+        topic="icam/add_focus",
+        qos=mqtt.QoS.AT_LEAST_ONCE,
+        callback=add_focus
+    )
+
+    def sub_focus(topic, payload, **kwargs):
+        message = json.loads(payload)
+        distance = Config.focus_distance
+
+        response = requests.post(Config.api_prefix + "/camera/focus_distance", files={
+            'focus_distance': (None, distance)
+        })
+        if response.status_code != 200:
+            logger.debug(response.text)
+            logger.error("Adjust failed due to focus error")
+        
+        response = requests.post(Config.api_prefix + "/camera/focus_direction", files={
+            'focus_direction': (None, "0")
+        })
+        if response.status_code != 200:
+            logger.debug(response.text)
+            logger.error("Adjust failed due to direction error")
+
+        logger.success("Adjust successed")
+    
+    mqtt_connection.subscribe(
+        topic="icam/sub_focus",
+        qos=mqtt.QoS.AT_LEAST_ONCE,
+        callback=sub_focus
+    )
+   
 
 if __name__ == "__main__":
     logger.info("Starting streaming...")

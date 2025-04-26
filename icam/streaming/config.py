@@ -19,4 +19,6 @@ class Config:
     iot_client_id = "icam"
     iot_endpoint = "a2uhbsqzhm0mpu-ats.iot.us-east-1.amazonaws.com"
 
+    focus_distance = "100"
+
     process: Popen = None
