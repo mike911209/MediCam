@@ -26,6 +26,13 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 
 import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js'
+import { useHomeStore } from '@/stores/home'
+import { storeToRefs } from 'pinia'
+import { configureChatApiClient } from '@/api/chatApi'
+import { configureNotificationApiClient } from '@/api/notificationApi'
+
+const store = useHomeStore()
+const { idToken, accessToken } = storeToRefs(store)
 
 const username = ref('')
 const password = ref('')
@@ -55,6 +62,10 @@ const handleLogin = () => {
     // Callback functions for authentication
     onSuccess: (session) => {
       console.log('Login Sucessfully! Token:', session.getIdToken().getJwtToken())
+      idToken.value = session.getIdToken().getJwtToken()
+      accessToken.value = session.getAccessToken().getJwtToken()
+      configureChatApiClient(idToken.value, accessToken.value)
+      configureNotificationApiClient(idToken.value, accessToken.value)
       errorMessage.value = ''
       router.push('/home') // back to home
     },
