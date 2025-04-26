@@ -1,6 +1,6 @@
 <template>
   <div class="notification-container">
-    <div class="notification-header">Notification</div>
+    <!-- <div class="notification-header">Notification</div> -->
     <div class="notification-content">
       <!-- iterate show the notification message -->
       <div class="notification-list" ref="notificationListRef">
@@ -83,7 +83,7 @@ const toggle2NotificationModal = (message: notificationMessage) => {
   flex-direction: column;
   flex-grow: 1;
   overflow-y: auto;
-  /* background-color: #ffffff; */
+  background-color: #ffffff;
   padding: 10px;
   gap: 10px;
 }
@@ -91,7 +91,7 @@ const toggle2NotificationModal = (message: notificationMessage) => {
 .notification-item {
   width: 100%;
   padding: 10px;
-  background-color: #e0e0e0;
+  background-color: #f0f0f0;
   border-radius: 5px;
   width: 100%;
   display: flex;

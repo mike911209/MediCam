@@ -3,3 +3,8 @@ export interface Message {
   status: 'normal' | 'initial' | 'loading'
   content: string
 }
+
+export interface OrderResponse {
+  text: string
+  time: string
+}

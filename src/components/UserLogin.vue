@@ -1,6 +1,6 @@
 <template>
   <div class="login-container">
-    <h2>MediCam</h2>
+    <span class="logo-text">MediCam</span>
     <div class="username-container">
       <label for="username">Username</label>
       <InputText id="username" v-model="username" type="text" />
@@ -30,9 +30,16 @@ import { useHomeStore } from '@/stores/home'
 import { storeToRefs } from 'pinia'
 import { configureChatApiClient } from '@/api/chatApi'
 import { configureNotificationApiClient } from '@/api/notificationApi'
+import { configureStreamingApiClient } from '@/api/streamingApi'
+import { useCredentialStore } from '@/stores/credentialStore'
+import { config } from '@/models/configModel'
 
 const store = useHomeStore()
-const { idToken, accessToken } = storeToRefs(store)
+const { pullNotificationList } = store
+const { idToken, accessToken, isLogin } = storeToRefs(store)
+
+const credentialStore = useCredentialStore()
+const { initCredentials } = credentialStore
 
 const username = ref('')
 const password = ref('')
@@ -40,8 +47,8 @@ const errorMessage = ref('')
 const router = useRouter()
 
 const userPool = new CognitoUserPool({
-  UserPoolId: 'us-east-1_NaKfQ7Ulj', // User Pool ID
-  ClientId: '12eu2ndpm6sb4h1bto0kmdna0a', // App Client ID
+  UserPoolId: config.value.USER_POOL_ID, // User Pool ID
+  ClientId: config.value.CLIENT_ID, // App Client ID
 })
 
 const handleLogin = () => {
@@ -61,19 +68,25 @@ const handleLogin = () => {
     // TODO: block home page if unauthenticated
     // Callback functions for authentication
     onSuccess: (session) => {
-      console.log('Login Sucessfully! Token:', session.getIdToken().getJwtToken())
+      // console.log('Login Sucessfully! Token:', session.getIdToken().getJwtToken())
+      console.log('Login Sucessfully!')
+      isLogin.value = true
       idToken.value = session.getIdToken().getJwtToken()
       accessToken.value = session.getAccessToken().getJwtToken()
       configureChatApiClient(idToken.value, accessToken.value)
       configureNotificationApiClient(idToken.value, accessToken.value)
+      configureStreamingApiClient(idToken.value, accessToken.value)
+      pullNotificationList()
+      initCredentials(idToken.value)
+
       errorMessage.value = ''
-      router.push('/home') // back to home
+      router.push('/') // back to home
     },
     onFailure: (err) => {
       console.error('Failed to Login:', err)
       errorMessage.value = err.message || 'Failed to Login'
     },
-    newPasswordRequired: (userAttributes, requiredAttributes) => {
+    newPasswordRequired: (userAttributes) => {
       delete userAttributes.email_verified
       delete userAttributes.phone_number_verified
       delete userAttributes.email
@@ -101,6 +114,11 @@ const handleLogin = () => {
 </script>
 
 <style scoped>
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #37613c;
+}
 .username-container,
 .password-container {
   display: flex;

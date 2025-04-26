@@ -1,8 +1,5 @@
 <template>
   <div class="chat-room-container">
-    <div class="chat-room-header">
-      <h1>MediCam</h1>
-    </div>
     <div class="chat-room-content">
       <div class="message-list" ref="messageListRef">
         <!-- Messages will be displayed here -->
@@ -12,8 +9,11 @@
           class="message-item"
           :class="{ 'from-user': message.role === 'user' }"
         >
+          <div v-if="message.status === 'loading'" class="message-text">
+            <VueSpinnerDots size="20" />
+          </div>
           <!-- <div class="message-sender">{{ message.role }}</div> -->
-          <div class="message-text">{{ message.content }}</div>
+          <div v-else class="message-text">{{ message.content }}</div>
         </div>
       </div>
       <div class="message-input">
@@ -39,9 +39,10 @@ import { storeToRefs } from 'pinia'
 import { type Message } from '@/models/chatModels'
 import { ref, nextTick } from 'vue'
 import { getBotResponse } from '@/api/chatApi'
+import { VueSpinnerDots } from 'vue3-spinners'
 
 const store = useHomeStore()
-const { push2historyMessage } = store
+const { push2historyMessage, popHistoryMessage } = store
 const { inputMessage, historyMessage } = storeToRefs(store)
 
 const messageListRef = ref<HTMLElement | null>(null)
@@ -63,17 +64,24 @@ const sendMessage = async () => {
   push2historyMessage(newMessage)
   inputMessage.value = ''
 
+  push2historyMessage({
+    role: 'assistant',
+    status: 'loading',
+    content: '',
+  })
+
   nextTick(() => {
     scrollToEnd()
   })
 
-  const botResponse = await getBotResponse(newMessage)
+  await getBotResponse(newMessage)
     .then((response) => {
       const botMessage: Message = {
         role: 'assistant',
         status: 'normal',
         content: response,
       }
+      popHistoryMessage()
       push2historyMessage(botMessage)
     })
     .catch((error) => {
@@ -82,6 +90,7 @@ const sendMessage = async () => {
         status: 'normal',
         content: 'Failed to get response',
       }
+      popHistoryMessage()
       push2historyMessage(botMessage)
       console.error('Error fetching bot response:', error)
     })
@@ -101,13 +110,6 @@ const sendMessage = async () => {
   width: 100%;
   gap: 10px;
   /* background-color: #f0f0f0; */
-}
-
-.chat-room-header {
-  /* background-color: #4caf50; */
-  /* color: white; */
-  padding: 10px;
-  text-align: center;
 }
 
 .chat-room-content {
@@ -149,6 +151,9 @@ const sendMessage = async () => {
     padding: 10px;
     background-color: #f0f0f0;
     max-width: 70%;
+    display: flex;
+
+    align-items: center;
   }
 }
 
