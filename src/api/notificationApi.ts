@@ -29,11 +29,18 @@ export const getNotificationList = async () => {
     const response_array = JSON.parse(response.data['body'])
 
     const response_array_mapped = response_array.map((item: OrderResponse) => {
+      const timeStr = item.date.replace(/_/g, ':')
+
+      const utcTime = new Date(timeStr + 'Z') // 注意加 "Z" 表示是 UTC 時間
+
+      const timezone8Date = new Date(utcTime.getTime() + 8 * 60 * 60 * 1000)
+
+      const formattedTime = timezone8Date.toISOString().replace('T', ' ').substring(0, 19)
       return {
         role: 'assistant',
         status: 'normal',
         content: item.text,
-        timestamp: item.time,
+        timestamp: formattedTime,
       }
     })
     // Convert timestamp to local string format

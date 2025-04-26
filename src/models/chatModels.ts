@@ -6,5 +6,5 @@ export interface Message {
 
 export interface OrderResponse {
   text: string
-  time: string
+  date: string
 }
