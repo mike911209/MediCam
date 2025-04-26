@@ -1,6 +1,10 @@
 import boto3
 import datetime
 import json
+import os
+
+AGENT_ID = os.getenv("AGENT_ID")
+AGENT_ALIAS_ID = os.getenv("AGENT_ALIAS_ID")
 
 def lambda_handler(event, context):
     today = datetime.datetime.utcnow().date()

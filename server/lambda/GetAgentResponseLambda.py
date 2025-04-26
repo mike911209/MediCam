@@ -1,7 +1,10 @@
 import json
 import uuid
 import boto3
+import os
 
+AGENT_ID = os.getenv("AGENT_ID")
+AGENT_ALIAS_ID = os.getenv("AGENT_ALIAS_ID")
 
 def lambda_handler(event, context):
     bedrock_agent = boto3.client('bedrock-agent-runtime')
