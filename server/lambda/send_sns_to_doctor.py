@@ -3,17 +3,20 @@ import boto3
 import urllib.parse
 import os
 
-SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN")
-APPROVE_INVOKE_BASE_URL = os.getenv("APPROVE_INVOKE_BASE_URL")
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:420210061761:DoctorAprrove"
+APPROVE_INVOKE_BASE_URL = "https://mey7i7fmo6.execute-api.us-east-1.amazonaws.com/doctor/get_response"
 
 
 def lambda_handler(event, context):
     s3 = boto3.client("s3")
     sns = boto3.client("sns")
 
-    bucket = event["Records"][0]["s3"]["bucket"]["name"]
+    sns_message = event['Records'][0]['Sns']['Message']
+    s3_event = json.loads(sns_message)
+
+    bucket = s3_event["Records"][0]["s3"]["bucket"]["name"]
     object_key = urllib.parse.unquote_plus(
-        event["Records"][0]["s3"]["object"]["key"], encoding="utf-8"
+        s3_event["Records"][0]["s3"]["object"]["key"], encoding="utf-8"
     )
 
     s3_response = s3.get_object(Bucket=bucket, Key=object_key)
