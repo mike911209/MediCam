@@ -3,8 +3,9 @@
 import argparse
 import asyncio
 import dotenv
-import logging
+import io
 import json
+import logging
 
 from datetime import datetime
 
@@ -16,8 +17,7 @@ import sounddevice as sd
 
 
 SAMPLE_RATE = 16000  # Audio sample rate (Hz)
-BLOCK_SIZE = 1024 # Stream block size
-THRESHOLD = 1e-4  # Volume threshold to decide "not muted"
+BLOCK_SIZE = 2048  # Stream block size
 BUCKET = "unapproved-orders"  # S3 bucket name
 
 
@@ -25,28 +25,41 @@ class Handler(TranscriptResultStreamHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.s3 = boto3.client("s3")
+        self.buffer = []
+        self.counter = 0
 
     async def handle_transcript_event(self, transcript_event):
-        transcript = ''.join(result.alternatives[0].transcript for result in transcript_event.transcript.results if not result.is_partial and len(result.alternatives))
-        if not transcript:
-            logging.debug("No transcript.")
-            return
-        logging.debug(f"Transcript: {transcript}")
-        print(transcript)
+        transcript = ''.join(
+            result.alternatives[0].transcript
+            for result in transcript_event.transcript.results
+            if not result.is_partial and len(result.alternatives)
+        ).strip()
 
-        name = datetime.now().isoformat(timespec="seconds")
-        with open(f"/tmp/{name}.json", 'w') as f:
-            json.dump({"date": name, "text": transcript}, f, ensure_ascii=False)
-        self.s3.upload_file(f"/tmp/{name}.json", BUCKET, f"{name}.txt")
+        if transcript:
+            self.counter = 0
+            self.buffer.append(transcript)
+            logging.debug(f"Transcript: {transcript}")
+        elif self.buffer:
+            self.counter += 1
+            if self.counter > 64:
+                self.counter = 0
+                logging.info("Uploading...")
+                name = datetime.now().isoformat(timespec="seconds")
+                bytes = json.dumps({"date": name, "text": ' '.join(self.buffer)}, ensure_ascii=False).encode("utf-8")
+                file_obj = io.BytesIO(bytes)
+                self.s3.upload_fileobj(file_obj, BUCKET, f"{name}.json")
+                self.buffer.clear()
 
 
 async def transcribe_streaming():
     ts = TranscribeStreamingClient(region="us-east-1")
 
     stream = await ts.start_stream_transcription(
-        language_code="zh-TW",
+        language_code=None,
         media_sample_rate_hz=SAMPLE_RATE,
-        media_encoding="pcm"
+        media_encoding="pcm",
+        identify_multiple_languages=True,
+        language_options=("zh-TW", "en-US"),
     )
     
     handler = Handler(stream.output_stream)
@@ -59,6 +72,8 @@ async def transcribe_streaming():
 
     async def receive(): await handler.handle_events()
 
+    logging.info("Starting...")
+
     await asyncio.gather(send(), receive())
 
 
@@ -66,7 +81,7 @@ def main(): asyncio.run(transcribe_streaming())
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Recorder with Transcribe.")
+    parser = argparse.ArgumentParser(description="Recorder with Transcribe Stream.")
     parser.add_argument(
         "--logging",
         default=0,
