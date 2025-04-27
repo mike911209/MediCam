@@ -76,13 +76,13 @@ def subscribe(mqtt_connection: Connection):
             if response.status_code != 200:
                 logger.debug(response.text)
                 logger.error("Streaming failed due to led error")
-            
-            response = requests.post(Config.api_prefix + "/camera/play")
-            if response.status_code != 200:
-                logger.debug(response.text)
-                logger.error("Streaming failed due to camera error")
 
-            Config.process = start_streaming()
+            if Config.process is None:
+                response = requests.post(Config.api_prefix + "/camera/play")
+                if response.status_code != 200:
+                    logger.debug(response.text)
+                    logger.error("Streaming failed due to camera error")
+                Config.process = start_streaming()
 
             logger.success("Streaming started")
 
@@ -105,11 +105,13 @@ def subscribe(mqtt_connection: Connection):
             if response.status_code != 200:
                 logger.error("Pausing streaming failed due to led error")
             
-            response = requests.post(Config.api_prefix + "/camera/pause")
-            if response.status_code != 200:
-                logger.error("Pausing streaming failed due to camera error")
+            if Config.process is not None:
+                response = requests.post(Config.api_prefix + "/camera/pause")
+                if response.status_code != 200:
+                    logger.error("Pausing streaming failed due to camera error")
 
-            Config.process.terminate()
+                Config.process.terminate()
+                Config.process = None
             
             logger.success("Streaming ended")
 
