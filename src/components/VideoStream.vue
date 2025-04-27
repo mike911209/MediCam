@@ -19,7 +19,7 @@ import { config } from '@/models/configModel'
 
 const credentialStore = useCredentialStore()
 
-const getHLSUrl = async () => {
+const getHLSUrl = async (retryCount = 10, delay = 3000) => {
   const region = config.value.REGION
   const streamName = config.value.STREAM_NAME
   const credentials = await credentialStore.getCredentials()
@@ -36,14 +36,29 @@ const getHLSUrl = async () => {
   const endpoint = dataEndpointResponse.DataEndpoint
   const kvamClient = new KinesisVideoArchivedMediaClient({ region, endpoint, credentials })
 
-  const hlsStreamResponse = await kvamClient.send(
-    new GetHLSStreamingSessionURLCommand({
-      StreamName: streamName,
-      PlaybackMode: 'LIVE', // LIVE 或 ON_DEMAND
-    }),
-  )
+  let lastError = null
 
-  return hlsStreamResponse.HLSStreamingSessionURL
+  for (let attempt = 1; attempt <= retryCount; attempt++) {
+    try {
+      const hlsStreamResponse = await kvamClient.send(
+        new GetHLSStreamingSessionURLCommand({
+          StreamName: streamName,
+          PlaybackMode: 'LIVE',
+        }),
+      )
+      return hlsStreamResponse.HLSStreamingSessionURL
+    } catch (error) {
+      lastError = error
+      if (error.name === 'ResourceNotFoundException') {
+        console.warn(`Attempt ${attempt}: No fragments yet, retrying after ${delay}ms...`)
+        await new Promise((resolve) => setTimeout(resolve, delay))
+      } else {
+        throw error
+      }
+    }
+  }
+
+  throw lastError
 }
 
 const videoPlayer = ref<HTMLVideoElement | null>(null)
@@ -52,12 +67,30 @@ onMounted(() => {
   getHLSUrl().then((url) => {
     if (videoPlayer.value && url) {
       if (Hls.isSupported()) {
-        const hls = new Hls()
+        const hls = new Hls({
+          maxBufferLength: 30, // 可选，最大缓存30秒
+          manifestLoadingTimeOut: 20000, // 可选，提高timeout
+        })
         hls.loadSource(url)
         hls.attachMedia(videoPlayer.value)
 
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          console.log('HLS manifest parsed')
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log('network error, trying to recover...')
+                hls.startLoad()
+                break
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log('media error, trying to recover...')
+                hls.recoverMediaError()
+                break
+              default:
+                console.log('unrecoverable error, destroying hls')
+                hls.destroy()
+                break
+            }
+          }
         })
 
         onBeforeUnmount(() => {
